@@ -479,22 +479,170 @@ VSC:
          extract >> transform >> load
 
 
-   ![image]()
+5.2	Flujo Moderno 
 
-   ![image]()
+Flujo moedrno con task decorador.
 
-   ![image]()
+VSC: 
 
-   ![image]()
+     from datetime import datetime
+     from airflow.decorators import dag, task
 
-   ![image]()
+     @dag(
+         schedule = '@daily',
+         start_date = datetime(2026, 5, 18),
+         catchup=False,
+         tags=["demo", "taskflow"]
+     )
+     def taskflow_demo():
+         @task
+         def extract():
+             data = ["apple", "banana", "cherry"]
+             return data
+    
+         @task
+         def transform(data):
+             transformed_data = [item.upper() for item in data]
+             return transformed_data
+    
+         @task
+         def load(data):
+             for item in data:
+                 print(f"Loaded: {item}")
 
-   ![image]()
+         load(transform(extract()))
 
-   ![image]()
+     taskflow_demo()
 
-   ![image]()
 
-   ![image]()
+ •	Resultados en la interface del usuario (localhost:8080/dags)
 
-   ![image]()
+ ![image](https://github.com/user-attachments/assets/49c56547-c3da-4b7c-856a-26ae58eb43f7)
+
+
+   ![image](https://github.com/user-attachments/assets/d60fea11-bf78-413c-b66e-4ff1ee9ca09d)
+
+   ![image](https://github.com/user-attachments/assets/8276de3a-5704-4b97-b597-17fa79aa50c2)
+
+   ![image](https://github.com/user-attachments/assets/abcafa0e-d114-47a9-a825-dccef9511b7e)
+
+6.	Categorías de Operadores
+
+6.1	Operadores de Acción. 
+
+Creamos el archivo en VSC
+
+VSC: 
+
+     #Importaciones escenciales
+     from datetime import datetime
+     from airflow.decorators import dag
+     from airflow.operators.bash import BashOperator
+
+     #Definir DAG
+     @dag(
+         dag_id = "bash_operator_demo",
+         start_date=datetime(2026, 5, 20),
+         schedule="@daily",
+         catchup=False,
+         tags=['bashdemo'],
+     )
+     def bash_operator_demo():
+         #definir tarea con operador bash
+         List_dag_files = BashOperator(
+             task_id="list_dag_folder_files",
+             bash_command="echo 'Files in DAGs Folder:' && ls -lh /opt/airflow/dags",
+         )
+
+      bash_operator_demo()
+
+  Ahora verificamos EN Airflow UI
+
+   ![image](https://github.com/user-attachments/assets/36151e98-ce13-4183-b57b-907f86b01a8d)
+
+   ![image](https://github.com/user-attachments/assets/baed792f-11a5-4e89-9e3c-b84842f3455b)
+
+   Luego lo activamos (tigger)
+
+   ![image](https://github.com/user-attachments/assets/1109c272-7d3e-48c2-bc3d-a10bcd8a15ee)
+
+   ![image](https://github.com/user-attachments/assets/18451e7c-fa0c-4165-b9d0-2bae80721743)
+
+   Los archivos sombrados deben estar en nuestra carpeta
+
+   ![image](https://github.com/user-attachments/assets/0044df7a-d455-4421-8038-931efae6b80f)
+
+   ![image](https://github.com/user-attachments/assets/adb091be-bde3-46c4-bb56-9cb2912f5762)
+
+   Y ahí podemos ver los archivos en la carpeta “dags”.
+
+  ![image](https://github.com/user-attachments/assets/5bcdefc8-cafc-498a-9423-88466f9cbf96)
+
+  6.2	Operadores de Transferencia
+
+  Código VSC:
+
+              #Importaciones escenciales
+              from datetime import datetime
+              from airflow.decorators import dag
+              from airflow.operators.bash import BashOperator
+              from airflow.providers.google.cloud.transfers.local_to_gcs import(
+                  LocalFilesystemToGCSOperator
+              )
+
+              #Definir DAG
+              @dag(
+                  dag_id = "bash_operator_demo",
+                  start_date=datetime(2026, 5, 20),
+                  schedule="@daily",
+                  catchup=False,
+                  tags=['bashdemo'],
+              )
+              def bash_operator_demo():
+
+                  #definir tarea con operador bash
+                  List_dag_files = BashOperator(
+                      task_id="list_dag_folder_files",
+                      bash_command="echo 'Files in DAGs Folder:' && ls -lh /opt/airflow/dags",
+                  )
+
+                  #operdor cloud - subir a GCS
+                  upload_to_gcs = LocalFilesystemToGCSOperator(
+                      task_id = "upload_csv_to_gcs",
+                      src = "/opt/airflow/dags/daily_sales.csv",
+                      dst = "demo/daily_sales.csv",
+                      bucket = "airflow-demo-gcs-allan",
+                      gcp_conn_id = "google_cloud_defualt",
+
+                  )
+
+                  #Definir las dependencias
+                  List_dag_files >> upload_to_gcs
+
+              bash_operator_demo()
+
+
+  ![image](https://github.com/user-attachments/assets/4703efc7-1725-4005-8fc8-162f47ce6439)
+
+  ![image](https://github.com/user-attachments/assets/d7f36971-5d21-495c-a0fd-86f6ace05c82)
+
+  ![image](https://github.com/user-attachments/assets/35811e3a-60ea-4b7f-b47b-e574d1448fd0)
+
+  
+6.3	Operadores de Sensor
+
+  ![image](https://github.com/user-attachments/assets/90a014fa-6897-4de4-995e-a9f84c51b7ba)
+
+  Definimos la ruta
+
+  ![image](https://github.com/user-attachments/assets/e653a51a-dc72-4e72-bbee-3ade7f1b442c)
+
+  Copiamos este id de conexión
+
+  ![image](https://github.com/user-attachments/assets/1709ed44-0c05-4e58-9117-7757b12c5230)
+
+  ![image](https://github.com/user-attachments/assets/07d503d1-fb8a-4ffb-90c9-a2dd6e6a0efc)
+
+  ![image](https://github.com/user-attachments/assets/b35b065e-ee8e-4c2b-b98d-521a7fd0f6e3)
+
+
