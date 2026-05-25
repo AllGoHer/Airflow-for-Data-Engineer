@@ -360,19 +360,124 @@ VSCode:
         postgres-db-volume:
 
 
-   ![image]()
+•	Luego en VSCode creamos otro archivo de entorno.
+ 
+ VSCode:
 
-   ![image]()
+          AIRFLOW_UID=50000
 
-   ![image]()
 
-   ![image]()
+   ![image](https://github.com/user-attachments/assets/f8dd4b51-b63a-448c-b51e-d109a9813151)
 
-   ![image]()
+   •	Ahora abrimos nuestro Docker Desktop y luego vamos a su terminal para conectar con el Docker compose de VSCode y, escribimos el siguiente comando.
 
-   ![image]()
+   Terminal Docker desktop:
+ 
+                           Cd Airflow
 
-   ![image]()
+   Terminal Docker desktop:
+   
+                           Docker compose up Airflow-init
+
+
+   ![image](https://github.com/user-attachments/assets/e785e054-4879-4008-adcf-4bf614fd3f2c)
+
+   Y luego veras en la pestaña de containers que aparece lo siguiente:
+
+   
+   ![image](https://github.com/user-attachments/assets/b8ce96ea-4755-47ce-9282-e9f0daa1e209)
+
+Ahora abrimos otra terminal con +  y escribimos el siguiente código.
+
+Terminal 2:
+                       
+           Cd Airflow
+
+Terminal 2:
+                     
+           Docker compose up -d
+
+
+   ![image](https://github.com/user-attachments/assets/b34c6766-5009-4390-a382-e299e22492ab)
+
+   Luego se observará lo siguiente en la pestaña de containers.
+
+   ![image](https://github.com/user-attachments/assets/498d58b8-2a28-4e8f-9e97-888f3c55be69)
+
+   Luego hacemos click en el puerto 8080:8080 de airflow-apiserver 1, el cual te llevara a una ventana de Airflow donde tendrás que crear un usuario y una contraseña para acceder.
+
+   
+   ![image](https://github.com/user-attachments/assets/a64244e8-51be-4a0a-a39b-aca4880ae2bc)
+
+   
+   ![image](https://github.com/user-attachments/assets/24674726-0f1f-48fc-8f17-d105ad7a69c3)
+
+5.	Creamos archivos en VSC 
+
+Vamos a hacer una comparación con un flujo clásico y flujo moderno.
+
+5.1	Flujo Clásico
+
+VSC:
+
+     from airflow import DAG
+     from airflow.operators.python import PythonOperator
+     from datetime import datetime
+
+     default_args = {
+         "owner": "airflow",
+         "retries": 2,
+         "retry_delay": 30, 
+     }
+
+     def start_task():
+         print("Pipeline started.")
+
+     def extract_data():
+         print("Extracting data...")
+         print("Data extracted successfully.")
+
+     def transform_data():
+         print("Transforming Data")
+         raise Exception("Intentional failure for UI demo")  #error para simulacion
+         print("Data transformed successfully.")
+
+     def load_data():
+         print("Loading data...")
+         print("Data loaded successfully.")
+
+     with DAG(
+         dag_id="ui_demo_pipeline",
+         description="DAG for Airflow UI walkthrough demo",
+         default_args=default_args,
+         start_date=datetime(2025, 12, 16),
+         schedule="*/1 * * * *", 
+         catchup=False,
+         tags=["ui-demo", "training"],
+     ) as dag:
+
+         start = PythonOperator(
+             task_id="start",
+             python_callable=start_task,
+         )
+
+         extract = PythonOperator(
+             task_id="extract_data",
+             python_callable=extract_data,
+         )
+
+         transform = PythonOperator(
+             task_id="transform_data",
+             python_callable=transform_data,
+         )
+
+         load = PythonOperator(
+             task_id="load_data",
+             python_callable=load_data,
+         )
+
+         extract >> transform >> load
+
 
    ![image]()
 
